@@ -9,6 +9,8 @@ using Microsoft.Bot.Connector.Teams;
 using Microsoft.Bot.Connector.Teams.Models;
 using Microsoft.Teams.Samples.HelloWorld.Web.Helper;
 using ProactiveMessageTest.Helper;
+using Microsoft.Bot.Builder.Dialogs;
+using Microsoft.Teams.Samples.HelloWorld.Web.Dialogs;
 
 namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
 {
@@ -18,31 +20,32 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
         [HttpPost]
         public async Task<HttpResponseMessage> Post([FromBody] Activity activity)
         {
-            using (var connector = new ConnectorClient(new Uri(activity.ServiceUrl)))
+            if (activity.Type == ActivityTypes.Message)
+            {
+                await Conversation.SendAsync(activity, () => new RootDialog());
+            }
+            else if (activity.Type == ActivityTypes.Invoke)
             {
                 if (activity.IsComposeExtensionQuery())
                 {
+                    ConnectorClient connector = new ConnectorClient(new Uri(activity.ServiceUrl));
                     var response = MessageExtension.HandleMessageExtensionQuery(connector, activity);
                     return response != null
                         ? Request.CreateResponse<ComposeExtensionResponse>(response)
                         : new HttpResponseMessage(HttpStatusCode.OK);
                 }
                 else
-                {
-                    if (activity.Type == ActivityTypes.Message)
-                    {
-                        await EchoBot.EchoMessage(connector, activity);
-                    }
-                    else
-                    {
-                        HandleSystemMessage(activity);
-                    }
+                    // Take action here
                     return new HttpResponseMessage(HttpStatusCode.Accepted);
-                }
             }
+            else
+            {
+                await HandleSystemMessage(activity);
+            }
+            return new HttpResponseMessage(System.Net.HttpStatusCode.Accepted);
         }
 
-        private Activity HandleSystemMessage(Activity message)
+        private async Task<Activity> HandleSystemMessage(Activity message)
         {
             if (message.Type == ActivityTypes.DeleteUserData)
             {
@@ -73,7 +76,7 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
                     TempStorage.ChannelId = data.Channel.Id;
                     Activity reply = message.CreateReply("We will posting a message when you ping on /postmessage endpoint.");
                     connector.Conversations.ReplyToActivity(reply);
-                    
+
                 }
             }
             else if (message.Type == ActivityTypes.Typing)
