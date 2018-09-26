@@ -1,0 +1,27 @@
+﻿@*<div class="font-semibold font-title">
+    This is our second tab
+</div>
+<p>
+    Welcome to Microsoft Teams Hello World sample app (C#)
+</p>*@
+
+
+
+<div class="font-semibold font-title">Configure your app here</div>
+<p>
+    <div>
+        <button onclick="submit();" >Submit</button>
+    </div>
+</p>
+
+<script type="text/javascript">
+    function submit() {
+        var customerInfo = {
+            name: "myname",
+            email: "myvalue",
+            favoriteBook: "mybook"
+        }
+        microsoftTeams.tasks.submitTask(customerInfo, "f25d8568-8dc3-4746-8b90-e03c9975a4ee");
+    }
+    
+</script>
